@@ -34,7 +34,7 @@ if(!empty($_FILES["pic"]["tmp_name"])){
 
     //練習:建立新的檔案檔名
 
-   
+
     //取得檔案上傳的暫存路徑
     $path=$_FILES["pic"]["tmp_name"];
 
@@ -43,8 +43,10 @@ if(!empty($_FILES["pic"]["tmp_name"])){
     
     //移動檔案到指定目錄下,並改命為$name
     move_uploaded_file($path,"./img/" . $name);
+  
     //copy("./img/" . $name,"./thumb/" . $name);
-    thumbnail("./img/" . $name, $name); //呼叫下方函式,把圖縮成小圖
+    thumbnail("./img/" . $name , $name);
+
     //將檔案資訊存入資料表
     $sql="insert into img (`name`,`path`,`description`) values('$name','./img/$name','$desc')";
     $pdo->query($sql);
@@ -52,7 +54,6 @@ if(!empty($_FILES["pic"]["tmp_name"])){
   }else{
     
     //檔案類型不符，回傳錯誤訊息
-
 
   }
 
@@ -97,8 +98,6 @@ $rows=$pdo->query($sql)->fetchAll();
 foreach($rows as $r){
 ?>  
   <tr>
-    <!-- <td><img src='<?=$r['path'];?>' style="width:100px;height:100px;"></td> -->
-<!--     <td><img src='./thumb/<?=$r['name'];?>' style="width:100px;height:100px;"></td>   限制顯示大小 -->
     <td><img src='./thumb/<?=$r['name'];?>'></td>
     <td><?=$r['name'];?></td>
     <td><?=$r['path'];?></td>
@@ -131,66 +130,60 @@ function chkpic($type){
 * imagecreatefrompng(source) 指定建立的圖檔類型，同型的函式有gif,jpeg 
 * imagesx(image),imagesy(image) 取得寬高                             
 * imagecreatetruecolor(x,y) 建立全彩圖形資源                         
-* imagecopyresampled(des,source,dx,fy,dx,dy,fw,fh,dw,dy);   
-* imagecopyresize(des,source,fx,fy,dx,dy,fw,fh,dw,dy);     //相素對相素縮放    
+* imagecopyresampled(des,source,dx,fy,dx,dy,fw,fh,dw,dy);           
+* imagecopyresize(des,source,fx,fy,dx,dy,fw,fh,dw,dy);           
 *    縮放圖形到目的圖形資源中                                       
 * imagejpeg(image,path)將圖形資源存成jpeg，同型的函式有gif,png     
 * imagedestroy(image)刪除圖形資源                                   
 ********************************************************************/
 
 //練習:建立一個自訂函式來產生縮圖檔案並放入指定目錄
-//https://www.php.net/manual/zh/book.image.php
 
-  function thumbnail($path,$name){
-    $imagetype=explode(".",$path); //炸成三個 explode(separator,string,limit)
-    switch ($imagetype[2]){
-      case "png":
-        $src=imagecreatefrompng($path);
-        break;
-      case "gif":
-        $src=imagecreatefromgif($path);
-        break;
-      case "jpg":
-      case "jpeg":
+function thumbnail($path,$name){
+
+  //判斷副檔名來決定要用什麼方式開啟來源檔
+  $imagetype=explode(".",$path);
+  switch($imagetype[2]){
+    case "png":
+      $src=imagecreatefrompng($path);
+    break;
+    case "gif":
+      $src=imagecreatefromgif($path);
+    break;
+    case "jpg":
+    case "jpeg":
       $src=imagecreatefromjpeg($path);
-        break;
-      case "bmp":
+    break;
+    case "bmp":
       $src=imagecreatefrombmp($path);
-        break;
-       
-      default:
-        # code...
-        break;
-    }
-
-    //$src=imagecreatefrompng($path);  //imagecreatefrompng — 由文件或 URL 创建一个新图象。
-
-    $src_w=imagesx($src); //來源
-    $src_h=imagesy($src);
-/*     echo $src_w;
-    echo ",";
-    echo $src_h; */
-    if($src_w>$src_h){
-      $des_w=150;  //目標
-      $des_h=intval((150/$src_w)*$src_h);
-    }else{
-      $des_w=intval((150/$src_h)*$src_w);  //目標
-      $des_h=150;
-    }
-
-/*     $des_w=150;  //目標
-    $des_h=150; */
- //   $des=imagecreatetruecolor($des_w,$des_h); //imagecreatetruecolor — 新建一个真彩色图像
-    $des=imagecreatetruecolor(150,150); //imagecreatetruecolor — 新建一个真彩色图像
-    //圖形背景為設定的顏色,不會都變成黑色
-    $white=imagecolorallocate($des,255,100,255);  //imagecolorallocate — 为一幅图像分配颜色
-    imagefill($des,0,0,$white);  // imagefill — 区域填充
-
-    $des_x=intval((150-$src_w)/2);
-    $des_y=intval((150-$src_y)/2);
-
-    imagecopyresampled($des,$src,0,0,0,0,$des_w,$des_w,$src_w,$src_h); //imagecopyresampled — 重采样拷贝部分图像并调整大小
-    imagepng($des,"./thumb/" . $name); //imagepng — 以 PNG 格式将图像输出到浏览器或文件
+    break;
   }
+
+  $src_w=imagesx($src);
+  $src_h=imagesy($src);
+
+  //根據長寬比來決定縮放後的長寬
+  if($src_w>$src_h){
+    $des_w=130;
+    $des_h=intval((130/$src_w)*$src_h);
+  }else{
+    $des_w=intval((130/$src_h)*$src_w);
+    $des_h=130;
+  } 
+  
+  $des=imagecreatetruecolor(150,150);
+  //建立白色背景色
+  $white=imagecolorallocate($des,255,100,255);
+  imagefill($des,0,0,$white);  //將顏色填回圖片資源
+
+  //計算在目前圖片的起始坐標
+  $des_x=intval((150-$des_w)/2);
+  $des_y=intval((150-$des_h)/2);
+
+  imagecopyresampled($des,$src,$des_x,$des_y,0,0,$des_w,$des_h,$src_w,$src_h);
+
+  imagepng($des,"./thumb/".$name);
+}
+
 
 ?>
