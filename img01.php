@@ -29,11 +29,13 @@ if(!empty($_FILES["pic"]["tmp_name"])){
   //判斷檔案是否屬於網頁可用圖檔
   if(chkpic($_FILES["pic"]["type"])){
 
-    //取得檔案原始檔案
-    $name=$_FILES['pic']['name'];
+    
 
     //練習:建立新的檔案檔名
+    $time=date("Ymdhis");
 
+    //製作新的檔案名稱
+    $filename=$time . "." . explode(".",$_FILES['pic']['name'])[1];
 
     //取得檔案上傳的暫存路徑
     $path=$_FILES["pic"]["tmp_name"];
@@ -42,13 +44,13 @@ if(!empty($_FILES["pic"]["tmp_name"])){
     $desc=$_POST['desc'];
     
     //移動檔案到指定目錄下,並改命為$name
-    move_uploaded_file($path,"./img/" . $name);
+    move_uploaded_file($path,"./img/$filename");
   
     //copy("./img/" . $name,"./thumb/" . $name);
-    thumbnail("./img/" . $name , $name);
+    thumbnail("./img/$filename" , $time);
 
     //將檔案資訊存入資料表
-    $sql="insert into img (`name`,`path`,`description`) values('$name','./img/$name','$desc')";
+    $sql="insert into img (`name`,`path`,`description`) values('$time','./img/$filename','$desc')";
     $pdo->query($sql);
 
   }else{
@@ -98,7 +100,7 @@ $rows=$pdo->query($sql)->fetchAll();
 foreach($rows as $r){
 ?>  
   <tr>
-    <td><img src='./thumb/<?=$r['name'];?>'></td>
+    <td><a href="<?=$r['path'];?>"><img src='./thumb/<?=$r['name'].".png";?>'></a></td>
     <td><?=$r['name'];?></td>
     <td><?=$r['path'];?></td>
     <td><?=$r['description'];?></td>
@@ -182,7 +184,7 @@ function thumbnail($path,$name){
 
   imagecopyresampled($des,$src,$des_x,$des_y,0,0,$des_w,$des_h,$src_w,$src_h);
 
-  imagepng($des,"./thumb/".$name);
+  imagepng($des,"./thumb/".$name.".png");
 }
 
 
