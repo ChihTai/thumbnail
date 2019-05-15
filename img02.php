@@ -10,105 +10,102 @@
  ***************************************/
 //練習:製作一個圖形驗證碼機制
 
-
-
 $code=code(8);
 
 ?>
-
-<!---用base64來顯示圖片---->
+<!-- 圖形不會存成一個檔,會用編碼形式顯現 -->
 <img src="data:image/png;base64,<?=codepic($code);?>">
 
 
 <?php
+   function codepic($code){
+
+      $text_box=imagettfbbox(20,0,realpath("./font/times.ttf"),$code);
+      $img_w=$text_box[2]+strlen($code)*10;
+      $img_h=$text_box[7]*-1+35;  //定義字顯示區域高度,依照不同字體需要逐步調整
+      $img=imagecreatetruecolor($img_w,$img_h);
+      //利用字串長度來設定圖片寬度
+      //$img=imagecreate(100,30);
+      //$img_w=strlen($code)*12;
+      //$img=imagecreate(100,30);
+      //$img=imagecreate($img_w[2],30);
+      //畫出圖形背景顏色
+      $bg=imagecolorallocate($img,255,255,255);
+      imagefill($img,0,0,$bg);
 
 
-function codepic($code){
+      //畫線迴圈
+      $lines=rand(2,5);
+      for($i=0;$i<$lines;$i++){
 
-   //計算圖片寬高
-   $text_box=imagettfbbox(20,0,realpath("./font/times.ttf"),$code);
-   $img_w=$text_box[2]+strlen($code)*10;
-   $img_h=$text_box[7]*-1+35;
-   $img=imagecreatetruecolor($img_w,$img_h);
-   
-   $bg=imagecolorallocate($img,255,200,255);
+         $start_x=rand(5,intval($img_w*0.25));
+         $start_y=rand(10,$img_h-10);
+         $end_x=rand(intval($img_w*0.75+5),$img_w-5); //線的結尾終止點
+         $end_y=rand(10,$img_h-10);
+         $line_color=imagecolorallocate($img,rand(50,200),rand(50,200),rand(50,200));
 
-   imagefill($img,0,0,$bg);
+         imageline($img,$start_x,$start_y,$end_x,$end_y,$line_color);
+      }
 
-   //畫線條的迴圈
-   $lines=rand(2,5);
-   for($i=0;$i<$lines;$i++){
+      $str_x=5;
+      $str_y=0;
 
-      $start_x=rand(5,intval($img_w*0.25));
-      $start_y=rand(10,$img_h-10);
-      $end_x=rand(intval($img_w*0.75+5),$img_w-5);
-      $end_y=rand(10,$img_h-10);
-      $line_color=imagecolorallocate($img,rand(50,200),rand(50,200),rand(50,200));
+      for($i=0;$i<strlen($code);$i++){
+      //imagecolorallocate — 为一幅图像分配颜色
+      $color=imagecolorallocate($img,rand(50,200),rand(50,200),rand(50,200));
 
-      imageline($img,$start_x,$start_y,$end_x,$end_y,$line_color);
+      //取得字元的四角座標位置
+      $textbox=imagettfbbox(16,0,realpath("./font/times.ttf"),substr($code,$i,1));
+//      imagestring($img,5,$str_x,$str_y,substr($code,$i,1),$color); //imagestring — 水平地画一行字符串
 
-   }
+      //$textbox[7]*-1 是第四個位置的Y
+      //計算在Y軸的位置
+      $str_y=rand(0,15)+$textbox[7]*-1+10; //隨機給高度   //   4   3  圖形取位置的順序 第四個點是第三個點*-1
+                                                      //   1   2
+      //$textbox=imagettftext($img,16,0,$str_x,$str_y,$color,realpath("./font/times.ttf"),substr($code,$i,1)); //imagestring — 水平地画一行字符串      
+      //print_r($textback);
 
-
-   //畫文字的迴圈
-   $str_x=5;
-   $str_y=0;
-   for($i=0;$i<strlen($code);$i++){
-
-     $color=imagecolorallocate($img,rand(50,200),rand(50,200),rand(50,200));
-
-      //imagestring($img,5,$str_x,$str_y,substr($code,$i,1),$color);
-      // image true type font bounding box 
-      //取得毎個字元的四角坐標值
-      
-      $textbox=imagettfbbox(20,0,realpath("./font/times.ttf"),substr($code,$i,1));
-      
-      //計算字元在Y軸的位置
-      $str_y=rand(0,15)+$textbox[7]*-1+10;
-      
       //產生傾斜角度
       $angle=rand(-30,30);
-
       imagettftext($img,20,$angle,$str_x,$str_y,$color,realpath("./font/times.ttf"),substr($code,$i,1));
-      
       //計算下一個字元在X軸的位置
-      $str_x=$str_x+$textbox[2]+10;
+      $str_x=$str_x+$textbox[2]+10; 
    }
 
-   //儲存成檔案
-   //imagepng($img,"./code/login_code.png");
+   //產生的圖檔,不使用圖形去儲存,改用編碼方式呈現
+      //imagepng($img,"./code/login_code.png");
+      ob_start();
+      imagepng($img);
+      $output = base64_encode(ob_get_clean());
+      imagedestroy($img);
+      return $output;
 
-   //利用BASE64傳到客戶端
-   ob_start();           //建立一個緩衝區
-   imagepng($img);        //將圖片資料寫入緩衝區
-   $output = base64_encode(ob_get_clean()); //將緩衝區中的資料以base64_encode()的方式做編碼
-   imagedestroy($img);    //刪除記憶體中的圖片資料
-   return $output; 
-
-}
+   }
 
 
 function code($x){
    $code="";
    for($i=0;$i<$x;$i++){
       $type=rand(1,3);
-      switch($type){
+      switch ($type) {
          case "1":
             //數字
             $code=$code . rand(0,9);
-         break;
+            break;
          case "2":
-            //小寫英文
             $code=$code . chr(rand(97,122));
-         break;
+         break;      
          case "3":
-            //大寫英文
-            $code=$code . chr(rand(65,90));
-         break;
+            $code=$code . chr(rand(97,122));
+         break; 
       }
    }
-
    return $code;
 }
+//echo code(10);
+   
 
+
+
+   //codepic($code);
 ?>
