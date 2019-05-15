@@ -29,12 +29,14 @@ if(!empty($_FILES["pic"]["tmp_name"])){
   //判斷檔案是否屬於網頁可用圖檔
   if(chkpic($_FILES["pic"]["type"])){
 
-    
+        //取得檔案原始檔案	    
+     /*    $name=$_FILES['pic']['name']; */  //解決圖片名稱重複的問題,不直接使用圖片名稱
 
     //練習:建立新的檔案檔名
-    $time=date("Ymdhis");
+    $time=date("Ymdhis");  //改為用時間方式取名為時間名稱
 
     //製作新的檔案名稱
+    //$time 為圖片名稱   explode(".",$_FILES['pic']['name'])[1] =>副檔名  $filename =>完整檔案名稱加副檔名
     $filename=$time . "." . explode(".",$_FILES['pic']['name'])[1];
 
     //取得檔案上傳的暫存路徑
@@ -44,6 +46,7 @@ if(!empty($_FILES["pic"]["tmp_name"])){
     $desc=$_POST['desc'];
     
     //移動檔案到指定目錄下,並改命為$name
+    //將暫存的檔案,移到./img/ 且改為時間檔案的完整名稱
     move_uploaded_file($path,"./img/$filename");
   
     //copy("./img/" . $name,"./thumb/" . $name);
@@ -100,7 +103,8 @@ $rows=$pdo->query($sql)->fetchAll();
 foreach($rows as $r){
 ?>  
   <tr>
-    <td><a href="<?=$r['path'];?>"><img src='./thumb/<?=$r['name'].".png";?>'></a></td>
+  <!-- 從資料庫抓出路徑,按小圖開啟實際大圖 -->
+    <td><a href="<?=$r['path'];?>"><img src='./thumb/<?=$r['name'].".png";?>'></a></td> 
     <td><?=$r['name'];?></td>
     <td><?=$r['path'];?></td>
     <td><?=$r['description'];?></td>
@@ -174,7 +178,7 @@ function thumbnail($path,$name){
   } 
   
   $des=imagecreatetruecolor(150,150);
-  //建立白色背景色
+  //建立顏色背景色
   $white=imagecolorallocate($des,255,100,255);
   imagefill($des,0,0,$white);  //將顏色填回圖片資源
 
@@ -184,7 +188,9 @@ function thumbnail($path,$name){
 
   imagecopyresampled($des,$src,$des_x,$des_y,0,0,$des_w,$des_h,$src_w,$src_h);
 
-  imagepng($des,"./thumb/".$name.".png");
+  // thumbnail("./img/$filename" , $time);   $time=date("Ymdhis");  //改為用時間方式取名為時間名稱
+  //$name 接進來的是時間 => function thumbnail($path,$name) 
+  imagepng($des,"./thumb/".$name.".png");    
 }
 
 
