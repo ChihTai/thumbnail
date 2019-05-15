@@ -167,12 +167,12 @@ function chkpic($type){
 /*     echo $src_w;
     echo ",";
     echo $src_h; */
-    if($src_w>$src_h){
-      $des_w=130;  //目標
-      $des_h=intval((130/$src_w)*$src_h);
+    if($src_w>$src_h){ //橫放或直放
+      $des_w=130;  //目標 圖片大小 寬固定
+      $des_h=intval((130/$src_w)*$src_h); //目標等比例,縮小後圖片大小
     }else{
-      $des_w=intval((130/$src_h)*$src_w);  //目標
-      $des_h=130;
+      $des_w=intval((130/$src_h)*$src_w);  //目標等比例,縮小後圖片大小
+      $des_h=130;  //高固定
     }
 
 /*     $des_w=150;  //目標
@@ -183,7 +183,8 @@ function chkpic($type){
     $white=imagecolorallocate($des,255,100,255);  //imagecolorallocate — 为一幅图像分配颜色
     imagefill($des,0,0,$white);  // imagefill — 区域填充
 
-    $des_x=intval((150-$src_w)/2);
+    //縮小圖片放置的起始點 (130*130的圖放到150*150中)
+    $des_x=intval((150-$src_w)/2); 
     $des_y=intval((150-$src_y)/2);
 
     imagecopyresampled($des,$src,0,0,0,0,$des_w,$des_w,$src_w,$src_h); //imagecopyresampled — 重采样拷贝部分图像并调整大小
